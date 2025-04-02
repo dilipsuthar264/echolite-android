@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">EchoLite</string>
+    <string name="search_song_artist_album">Search Song, Artist, Album...</string>
+    <string name="search">Search</string>
+    <string name="no_songs_found">No songs found</string>
+    <string name="no_artists_found">No artists found</string>
+    <string name="no_albums_found">No albums found</string>
+    <string name="popular_songs">Popular Songs</string>
+    <string name="view_all">View all</string>
+    <string name="albums">Albums</string>
+    <string name="songs">Songs</string>
+    <string name="up_next">Up Next</string>
+    <string name="queue">Queue</string>
+</resources>
