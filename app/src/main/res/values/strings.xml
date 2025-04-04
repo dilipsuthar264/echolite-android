@@ -11,4 +11,5 @@
     <string name="songs">Songs</string>
     <string name="up_next">Up Next</string>
     <string name="queue">Queue</string>
+    <string name="favorite_songs">Favorite Songs</string>
 </resources>

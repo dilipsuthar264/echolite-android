@@ -64,10 +64,13 @@ fun formatTime(milliseconds: Float): String {
     return String.format("%02d:%02d", minutes, seconds)
 }
 
-fun findNextSong(musicList: List<SongResponseModel>, currentTrack: SongResponseModel?): SongResponseModel? {
+fun findNextSong(
+    musicList: List<SongResponseModel>,
+    currentTrack: SongResponseModel?
+): SongResponseModel? {
     if (musicList.isEmpty()) return null
-    val index = musicList.indexOf(currentTrack).takeIf { it >= 0 } ?: return null
+    val index =
+        musicList.indexOfFirst { it.id == currentTrack?.id }.takeIf { it >= 0 } ?: return null
     val nextIndex = (index + 1) % musicList.size
-    val nextItem = musicList.getOrNull(nextIndex) ?: return null
-    return nextItem
+    return musicList.getOrNull((index + 1) % musicList.size)
 }

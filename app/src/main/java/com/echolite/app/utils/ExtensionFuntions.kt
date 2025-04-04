@@ -1,22 +1,19 @@
 package com.echolite.app.utils
 
-import android.graphics.drawable.BitmapDrawable
-import androidx.compose.foundation.Indication
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.Role
-import androidx.core.app.NotificationCompat
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
-import coil3.ImageLoader
-import coil3.request.ImageRequest
-import coil3.request.SuccessResult
+import com.echolite.app.data.model.response.AlbumResponseModel
+import com.echolite.app.data.model.response.DownloadUrlModel
+import com.echolite.app.data.model.response.ImageResponseModel
+import com.echolite.app.data.model.response.SongArtistsModel
 import com.echolite.app.data.model.response.SongResponseModel
+import com.echolite.app.room.entities.FavoriteSongEntity
+import com.echolite.app.room.entities.SongEntity
 
 
 fun NavHostController.getViewModelStoreOwner() = this.getViewModelStoreOwner(this.graph.id)
@@ -38,6 +35,34 @@ fun Modifier.dynamicPadding(paddingValues: PaddingValues): Modifier {
             .navigationBarsPadding()
     )
 }
+
 fun List<SongResponseModel>.updatePlayingSong(currentTrack: SongResponseModel?): List<SongResponseModel> {
     return this.map { it.copy(isPlaying = it.id == currentTrack?.id) }
+}
+
+fun SongEntity.toSongResponseModel(): SongResponseModel {
+    return SongResponseModel(
+        id = this.songId,
+        name = this.name,
+        duration = this.duration,
+        album = this.albumResponseModel.fromJson<AlbumResponseModel>(),
+        artists = this.songArtistsModel.fromJson<SongArtistsModel>(),
+        image = this.image.asSequence().map { ImageResponseModel(url = it) }.toList(),
+        downloadUrl = this.downloadUrl.asSequence().map { DownloadUrlModel(url = it) }.toList()
+    )
+}
+fun FavoriteSongEntity.toSongResponseModel(): SongResponseModel {
+    return SongResponseModel(
+        id = this.songId,
+        name = this.name,
+        duration = this.duration,
+        album = this.albumResponseModel.fromJson<AlbumResponseModel>(),
+        artists = this.songArtistsModel.fromJson<SongArtistsModel>(),
+        image = this.image.asSequence().map { ImageResponseModel(url = it) }.toList(),
+        downloadUrl = this.downloadUrl.asSequence().map { DownloadUrlModel(url = it) }.toList()
+    )
+}
+fun <T> List<T>.middleItem(): T? {
+    if (isEmpty()) return null
+    return this[size / 2]
 }

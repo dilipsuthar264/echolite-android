@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.echolite.app.R
+import com.echolite.app.navigation.DashboardRoute
 import com.echolite.app.utils.singleClick
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -45,7 +46,21 @@ fun AppBar(
                     AppBarBackBtn(navController, MaterialTheme.colorScheme.onBackground)
                 }
             },
-            actions = actions,
+            actions = {
+                IconButton(
+                    onClick = singleClick{
+                        navController.popBackStack(DashboardRoute, false)
+                    },
+                    modifier = Modifier
+                        .padding(start = 5.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_home),
+                        contentDescription = "Back",
+                        tint = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+            },
         )
         if (elevation) {
             HorizontalDivider()

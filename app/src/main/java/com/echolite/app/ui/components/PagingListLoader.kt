@@ -40,3 +40,13 @@ fun ShowBottomLoader() {
         )
     }
 }
+
+@Composable
+fun ShowLoader(modifier: Modifier =  Modifier.size(30.dp)){
+    CircularProgressIndicator(
+        modifier =modifier,
+        strokeCap = StrokeCap.Round,
+        strokeWidth = 3.dp,
+        color = MaterialTheme.colorScheme.onBackground
+    )
+}

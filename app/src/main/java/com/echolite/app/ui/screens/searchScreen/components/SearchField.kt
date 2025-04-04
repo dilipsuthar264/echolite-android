@@ -19,6 +19,8 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -27,6 +29,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.room.util.foreignKeyCheck
 import com.echolite.app.R
 import com.echolite.app.navigation.SearchScreenRoute
 import com.echolite.app.ui.components.HorizontalSpace
@@ -34,6 +37,7 @@ import com.echolite.app.utils.singleClick
 
 @Composable
 fun SearchField(
+    focusRequester : FocusRequester,
     searchState: MutableState<String>,
     onSearch: KeyboardActionScope.() -> Unit
 ) {
@@ -47,6 +51,7 @@ fun SearchField(
         ),
         modifier = Modifier
             .fillMaxWidth()
+            .focusRequester(focusRequester)
             .padding(horizontal = 20.dp)
             .border(
                 1.dp,

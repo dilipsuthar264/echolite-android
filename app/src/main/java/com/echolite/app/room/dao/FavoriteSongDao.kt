@@ -18,7 +18,7 @@ interface FavoriteSongDao {
     @Query("SELECT * FROM favorite_song_table WHERE song_id= :songId")
     suspend fun getFavoriteSongById(songId: String): FavoriteSongEntity?
 
-    @Query("SELECT * FROM favorite_song_table")
+    @Query("SELECT * FROM favorite_song_table ORDER BY id DESC")
     suspend fun getAllFavorites(): List<FavoriteSongEntity>
 
     @Query("SELECT EXISTS(SELECT 1 FROM favorite_song_table WHERE song_id = :songId LIMIT 1)")
