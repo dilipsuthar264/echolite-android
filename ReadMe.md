@@ -1,4 +1,7 @@
-# 🎉 Echolite - Music Streaming App
+
+<img src = "app\src\main\ic_launcher-playstore.png" width = 200>
+
+# 🎵 Echolite - Music Streaming App
 
 ![Android](https://img.shields.io/badge/Android-%233DDC84.svg?style=for-the-badge&logo=android&logoColor=white)
 ![Kotlin](https://img.shields.io/badge/kotlin-%237F52FF.svg?style=for-the-badge&logo=kotlin&logoColor=white)
