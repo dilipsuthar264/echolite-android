@@ -1,5 +1,6 @@
 package com.echolite.app.ui.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -11,9 +12,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil3.compose.AsyncImage
+import coil3.compose.rememberAsyncImagePainter
 import com.echolite.app.R
 import com.echolite.app.data.model.response.ArtistResponseModel
+import com.echolite.app.utils.middleItem
 import com.echolite.app.utils.singleClick
 
 @Composable
@@ -29,11 +31,13 @@ fun ArtistListItem(artist: ArtistResponseModel?, onClick: (String) -> Unit) {
         ),
         modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
         leadingContent = {
-            AsyncImage(
-                model = artist?.image?.lastOrNull()?.url,
+            Image(
+                painter = rememberAsyncImagePainter(
+                    artist?.image?.middleItem()?.url,
+                    placeholder = painterResource(R.drawable.ic_user),
+                    error = painterResource(R.drawable.ic_user),
+                ),
                 contentDescription = null,
-                placeholder = painterResource(R.drawable.ic_user),
-                error = painterResource(R.drawable.ic_user),
                 modifier = Modifier
                     .clip(CircleShape)
                     .size(45.dp)

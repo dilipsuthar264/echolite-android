@@ -1,7 +1,10 @@
 package com.echolite.app.musicPlayer
 
 import com.echolite.app.data.model.response.SongResponseModel
+import com.echolite.app.room.entities.FavoriteSongEntity
+import com.echolite.app.room.entities.SongEntity
 import com.echolite.app.utils.MusicRepeatMode
+import com.echolite.app.utils.toSongResponseModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -18,6 +21,9 @@ class MusicPlayerStateHolder @Inject constructor() {
 
     private val _isPlaying = MutableStateFlow<Boolean>(false)
     val isPlaying = _isPlaying.asStateFlow()
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading = _isLoading.asStateFlow()
 
     private val _maxDuration = MutableStateFlow(0f)
     val maxDuration = _maxDuration.asStateFlow()
@@ -36,6 +42,10 @@ class MusicPlayerStateHolder @Inject constructor() {
 
     fun updateIsPlaying(isPlaying: Boolean) {
         _isPlaying.value = isPlaying
+    }
+
+    fun updateLoading(isLoading: Boolean) {
+        _isLoading.update { isLoading }
     }
 
     fun updateMaxDuration(duration: Float) {
@@ -61,11 +71,6 @@ class MusicPlayerStateHolder @Inject constructor() {
 
     private val _commands = MutableSharedFlow<MusicCommand>()
     val commands = _commands.asSharedFlow()
-//
-//    fun playAndSet(song: SongResponseModel, list: List<SongResponseModel>) {
-//        _songList.update { list }
-//        _currentTrack.update { song }
-//    }
 
     fun toggleRepeat() {
         CoroutineScope(Dispatchers.Main).launch {
@@ -94,6 +99,24 @@ class MusicPlayerStateHolder @Inject constructor() {
     fun playTrack(song: SongResponseModel, songList: List<SongResponseModel>) {
         CoroutineScope(Dispatchers.Main).launch {
             _commands.emit(MusicCommand.PlayTrack(song, songList))
+        }
+    }
+
+
+    fun playTrack(song: SongEntity, songList: List<SongEntity>) {
+        CoroutineScope(Dispatchers.Main).launch {
+            val mappedSong = song.toSongResponseModel()
+            val mappedList = songList.asSequence().map { it.toSongResponseModel() }.toList()
+            _commands.emit(MusicCommand.PlayTrack(mappedSong, mappedList))
+        }
+    }
+
+
+    fun playTrack(song: FavoriteSongEntity, songList: List<FavoriteSongEntity>) {
+        CoroutineScope(Dispatchers.Main).launch {
+            val mappedSong = song.toSongResponseModel()
+            val mappedList = songList.asSequence().map { it.toSongResponseModel() }.toList()
+            _commands.emit(MusicCommand.PlayTrack(mappedSong, mappedList))
         }
     }
 

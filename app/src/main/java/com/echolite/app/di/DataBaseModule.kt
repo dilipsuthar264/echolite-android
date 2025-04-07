@@ -45,24 +45,12 @@ object DataBaseModule {
         return db.favoriteSongDao()
     }
 
-    @Provides
-    @Singleton
-    fun provideFavoriteSongRepo(favoriteSongDao: FavoriteSongDao): FavoriteSongRepo {
-        return FavoriteSongRepo(favoriteSongDao)
-    }
-
     // recent Songs
 
     @Provides
     @Singleton
     fun provideRecentSongDao(db: EchoLiteDataBase): RecentSongDao {
         return db.recentSongDao()
-    }
-
-    @Provides
-    @Singleton
-    fun provideRecentSongRepo(recentSongDao: RecentSongDao): RecentSongRepo {
-        return RecentSongRepo(recentSongDao)
     }
 
     // recent album
@@ -73,25 +61,14 @@ object DataBaseModule {
         return db.recentAlbumDao()
     }
 
-    @Provides
-    @Singleton
-    fun provideRecentAlbumRepo(recentAlbumDao: RecentAlbumDao): RecentAlbumRepo {
-        return RecentAlbumRepo(recentAlbumDao)
-    }
-
 
     // recent Artist
 
     @Provides
     @Singleton
-    fun provideRecentArtistDao(db: EchoLiteDataBase): RecentAlbumDao {
-        return db.recentAlbumDao()
+    fun provideRecentArtistDao(db: EchoLiteDataBase): RecentArtistDao {
+        return db.recentArtistDao()
     }
 
-    @Provides
-    @Singleton
-    fun provideRecentArtistRepo(recentArtistDao: RecentArtistDao): RecentArtistRepo {
-        return RecentArtistRepo(recentArtistDao)
-    }
 
 }

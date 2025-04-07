@@ -1,5 +1,6 @@
 package com.echolite.app.ui.screens.albumScreen
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,6 +20,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -26,8 +28,10 @@ import androidx.compose.ui.window.Popup
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import coil3.compose.AsyncImage
+import coil3.compose.rememberAsyncImagePainter
+import com.echolite.app.R
 import com.echolite.app.navigation.AlbumScreenRoute
+import com.echolite.app.room.viewmodel.RecentViewModel
 import com.echolite.app.ui.components.AppBar
 import com.echolite.app.ui.components.HorizontalSpace
 import com.echolite.app.ui.components.ShowBottomLoader
@@ -35,6 +39,8 @@ import com.echolite.app.ui.components.SongListItem
 import com.echolite.app.ui.components.VerticalSpace
 import com.echolite.app.ui.screens.albumScreen.viewmodel.AlbumViewModel
 import com.echolite.app.utils.dynamicImePadding
+import com.echolite.app.utils.getViewModelStoreOwner
+import com.echolite.app.utils.middleItem
 import com.echolite.app.utils.updatePlayingSong
 
 @Composable
@@ -42,6 +48,7 @@ fun AlbumScreen(
     navController: NavController,
     args: AlbumScreenRoute,
     viewModel: AlbumViewModel = hiltViewModel(),
+    recentViewModel: RecentViewModel = hiltViewModel(navController.getViewModelStoreOwner())
 ) {
 
     val albumDetails by viewModel.albumDetails.collectAsStateWithLifecycle()
@@ -77,8 +84,12 @@ fun AlbumScreen(
                         .padding(horizontal = 20.dp),
                     verticalAlignment = Alignment.Top,
                 ) {
-                    AsyncImage(
-                        model = albumDetails.image?.get(1)?.url,
+                    Image(
+                        rememberAsyncImagePainter(
+                            albumDetails.image?.middleItem()?.url,
+                            placeholder = painterResource(R.drawable.ic_play),
+                            error = painterResource(R.drawable.ic_play),
+                        ),
                         contentDescription = null,
                         modifier = Modifier.size(100.dp)
                     )
@@ -103,7 +114,7 @@ fun AlbumScreen(
                             fontWeight = FontWeight.SemiBold
                         )
                         VerticalSpace(5.dp)
-                        Text(albumDetails.artists?.all?.mapNotNull { it.name }
+                        Text(albumDetails.artists?.primary?.mapNotNull { it.name }
                             ?.joinToString(", ") ?: "",
                             fontSize = 14.sp,
                             color = MaterialTheme.colorScheme.onSurface)
@@ -127,6 +138,7 @@ fun AlbumScreen(
                                 song = song,
                                 songList = albumDetails.songs
                             )
+                            recentViewModel.addToRecentAlbum(albumDetails)
                         }
                     }
                     item {

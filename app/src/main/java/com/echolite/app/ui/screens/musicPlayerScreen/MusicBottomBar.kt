@@ -1,5 +1,6 @@
 package com.echolite.app.ui.screens.musicPlayerScreen
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -11,6 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,15 +24,38 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil3.compose.AsyncImage
+import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import coil3.compose.rememberAsyncImagePainter
 import com.echolite.app.R
+import com.echolite.app.room.viewmodel.RecentViewModel
 import com.echolite.app.ui.components.HorizontalSpace
+import com.echolite.app.ui.components.ShowLoader
 import com.echolite.app.ui.screens.musicPlayerScreen.viewmodel.MusicPlayerViewModel
+import com.echolite.app.utils.getViewModelStoreOwner
+import com.echolite.app.utils.middleItem
 
 @Composable
-fun MusicBottomBar(viewModel: MusicPlayerViewModel = hiltViewModel(), onClick: () -> Unit) {
+fun MusicBottomBar(
+    navController: NavHostController,
+    viewModel: MusicPlayerViewModel = hiltViewModel(),
+    recentViewmodel: RecentViewModel = hiltViewModel(navController.getViewModelStoreOwner()),
+    onClick: () -> Unit
+) {
+
     val track by viewModel.musicPlayerStateHolder.currentTrack.collectAsStateWithLifecycle()
     val isPlaying by viewModel.musicPlayerStateHolder.isPlaying.collectAsStateWithLifecycle()
+    val isLoading by viewModel.musicPlayerStateHolder.isLoading.collectAsStateWithLifecycle()
+
+    LaunchedEffect(track) {
+        track?.let {
+            recentViewmodel.addToRecentSong(it)
+        }
+        track?.artists?.primary?.firstOrNull()?.let {
+            recentViewmodel.addToRecentArtist(it)
+        }
+    }
+
     Row(
         modifier = Modifier
 //            .background(androidx.compose.material3.MaterialTheme.colorScheme.background)
@@ -40,8 +65,8 @@ fun MusicBottomBar(viewModel: MusicPlayerViewModel = hiltViewModel(), onClick: (
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        AsyncImage(
-            model = track?.image?.last()?.url,
+        Image(
+            rememberAsyncImagePainter(track?.image?.middleItem()?.url),
             contentDescription = track?.name,
             modifier = Modifier
                 .size(50.dp)
@@ -73,15 +98,19 @@ fun MusicBottomBar(viewModel: MusicPlayerViewModel = hiltViewModel(), onClick: (
                 .clickable { viewModel.musicPlayerStateHolder.prev() }
         )
         HorizontalSpace(15.dp)
-        Icon(
-            painterResource(
-                if (isPlaying) R.drawable.ic_pause else R.drawable.ic_play
-            ),
-            contentDescription = "Play",
-            modifier = Modifier
-                .size(30.dp)
-                .clickable { viewModel.musicPlayerStateHolder.playPause() }
-        )
+        if (isLoading) {
+            ShowLoader()
+        } else {
+            Icon(
+                painterResource(
+                    if (isPlaying) R.drawable.ic_pause else R.drawable.ic_play
+                ),
+                contentDescription = "Play",
+                modifier = Modifier
+                    .size(30.dp)
+                    .clickable { viewModel.musicPlayerStateHolder.playPause() }
+            )
+        }
         HorizontalSpace(15.dp)
         Icon(
             painterResource(R.drawable.ic_next),

@@ -19,3 +19,55 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+
+# Keep all Kotlin metadata for reflection
+-keep class kotlin.** { *; }
+
+# Keep Jetpack Compose classes and runtime annotations
+-keep class androidx.compose.** { *; }
+-keep @androidx.compose.runtime.Composable class * { *; }
+
+# Preserve Jetpack Compose-generated functions and methods
+-keepclassmembers class * {
+    @androidx.compose.runtime.Composable <methods>;
+}
+
+# Keep all classes and methods in your app package
+-keep class com.echolite.app.** { *; }
+
+# Keep custom UI components and inner classes
+-keep class com.echolite.app.ui.** { *; }
+
+# Ensure Composer constructor is not removed or obfuscated
+-keepclassmembers class * {
+    public <init>(androidx.compose.runtime.Composer, int, int);
+}
+
+# Preserve generic types if needed
+-keepnames class * { *; }
+
+# Optional: Debugging
+# Suppress warnings from libraries you trust (optional)
+-dontwarn androidx.compose.**
+-dontwarn kotlinx.**
+
+# Enable this if your app uses reflection
+-keepattributes *Annotation*
+-keep class kotlinx.coroutines.internal.** { *; }
+-keep class kotlinx.coroutines.** { *; }
+
+# Optimize only if you're sure
+-optimizations !code/simplification/arithmetic,!field/*,!class/merging/*
+
+# Remove log calls in release builds
+-assumenosideeffects class android.util.Log {
+    public static *** d(...);
+    public static *** i(...);
+    public static *** w(...);
+    public static *** e(...);
+    public static *** v(...);
+}
+
+-keep class androidx.compose.** { *; }
+-keep class kotlin.Metadata { *; }

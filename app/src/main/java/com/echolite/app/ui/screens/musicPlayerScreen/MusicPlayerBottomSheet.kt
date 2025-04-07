@@ -1,5 +1,6 @@
 package com.echolite.app.ui.screens.musicPlayerScreen
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -42,28 +43,36 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
-import coil3.compose.AsyncImage
+import coil3.compose.rememberAsyncImagePainter
 import com.echolite.app.R
+import com.echolite.app.data.model.response.SongResponseModel
 import com.echolite.app.navigation.ArtistProfileScreenRoute
+import com.echolite.app.room.viewmodel.RecentViewModel
 import com.echolite.app.ui.components.HorizontalSpace
+import com.echolite.app.ui.components.ShowLoader
 import com.echolite.app.ui.components.SongListItem
 import com.echolite.app.ui.components.VerticalSpace
+import com.echolite.app.ui.screens.favoriteScreen.viewmodel.FavoriteViewModel
 import com.echolite.app.ui.screens.musicPlayerScreen.viewmodel.MusicPlayerViewModel
 import com.echolite.app.utils.findNextSong
 import com.echolite.app.utils.formatTime
+import com.echolite.app.utils.getViewModelStoreOwner
 import com.echolite.app.utils.updatePlayingSong
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MusicPlayerBottomSheet(
     navController: NavHostController,
-    viewmodel: MusicPlayerViewModel = hiltViewModel(), onDismiss: () -> Unit
+    viewmodel: MusicPlayerViewModel = hiltViewModel(), onDismiss: () -> Unit,
+    favViewModel: FavoriteViewModel = hiltViewModel(navController.getViewModelStoreOwner()),
+
 ) {
     val currentTrack by viewmodel.musicPlayerStateHolder.currentTrack.collectAsStateWithLifecycle()
     val currentDuration by viewmodel.musicPlayerStateHolder.currentDuration.collectAsStateWithLifecycle()
     val maxDuration by viewmodel.musicPlayerStateHolder.maxDuration.collectAsStateWithLifecycle()
     val songList by viewmodel.musicPlayerStateHolder.songList.collectAsStateWithLifecycle()
     val nextSong = findNextSong(songList, currentTrack)
+
 
     // show show queue
     var showQueue by remember { mutableStateOf(false) }
@@ -111,8 +120,8 @@ fun MusicPlayerBottomSheet(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             VerticalSpace(50.dp)
-            AsyncImage(
-                model = currentTrack?.image?.last()?.url,
+            Image(
+                rememberAsyncImagePainter(currentTrack?.image?.lastOrNull()?.url),
                 contentDescription = currentTrack?.name,
                 modifier = Modifier
                     .fillMaxWidth(0.8f)
@@ -143,7 +152,7 @@ fun MusicPlayerBottomSheet(
                 viewmodel.musicPlayerStateHolder.seekTo(it)
             }
             VerticalSpace(20.dp)
-            ActionsBtns(viewmodel)
+            ActionsBtns(viewmodel, favViewModel, currentTrack)
             VerticalSpace(20.dp)
             Row(
                 Modifier
@@ -254,20 +263,39 @@ private fun DurationSlider(
 }
 
 @Composable
-private fun ActionsBtns(viewmodel: MusicPlayerViewModel) {
+private fun ActionsBtns(
+    viewmodel: MusicPlayerViewModel,
+    favViewModel: FavoriteViewModel,
+    currentTrack: SongResponseModel?
+) {
     val isPlaying by viewmodel.musicPlayerStateHolder.isPlaying.collectAsStateWithLifecycle()
     val repeatMode by viewmodel.musicPlayerStateHolder.repeatMode.collectAsStateWithLifecycle()
+    val isLoading by viewmodel.musicPlayerStateHolder.isLoading.collectAsStateWithLifecycle()
+    val isFav by favViewModel.isFav.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        favViewModel.isFav(currentTrack?.id ?: "")
+    }
+
     Row(
         Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
-            painterResource(R.drawable.ic_heart),
+            painterResource(
+                if (isFav) R.drawable.ic_heart_filled else R.drawable.ic_heart
+            ),
             contentDescription = "liked",
             modifier = Modifier
                 .size(25.dp)
-                .clickable { },
+                .clickable {
+                    currentTrack?.let {
+                        favViewModel.toggleFav(it) {
+                            favViewModel.isFav(it.id ?: "")
+                        }
+                    }
+                },
             tint = MaterialTheme.colorScheme.onBackground,
         )
         HorizontalSpace()
@@ -279,19 +307,27 @@ private fun ActionsBtns(viewmodel: MusicPlayerViewModel) {
                 .clickable { viewmodel.musicPlayerStateHolder.prev() },
             tint = MaterialTheme.colorScheme.onBackground
         )
-        Icon(
-            painterResource(if (isPlaying) R.drawable.ic_pause else R.drawable.ic_play),
-            contentDescription = "play pause",
-            modifier = Modifier
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surface)
-                .padding(15.dp)
-                .size(30.dp)
-                .clickable {
-                    viewmodel.musicPlayerStateHolder.playPause()
-                },
-            tint = MaterialTheme.colorScheme.onBackground
-        )
+        if (isLoading) {
+            ShowLoader(
+                Modifier
+                    .padding(15.dp)
+                    .size(30.dp)
+            )
+        } else {
+            Icon(
+                painterResource(if (isPlaying) R.drawable.ic_pause else R.drawable.ic_play),
+                contentDescription = "play pause",
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surface)
+                    .clickable {
+                        viewmodel.musicPlayerStateHolder.playPause()
+                    }
+                    .padding(15.dp)
+                    .size(30.dp),
+                tint = MaterialTheme.colorScheme.onBackground
+            )
+        }
         Icon(
             painterResource(R.drawable.ic_next),
             contentDescription = "next",

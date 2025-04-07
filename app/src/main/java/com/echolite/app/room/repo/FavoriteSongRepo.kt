@@ -13,6 +13,10 @@ class FavoriteSongRepo @Inject constructor(
         favoriteSongDao.addToFavorite(song)
     }
 
+    suspend fun addAllToFavorite(songs: List<FavoriteSongEntity>) {
+        favoriteSongDao.addAllToFavorite(songs)
+    }
+
     suspend fun toggleFavorite(song: FavoriteSongEntity) {
         favoriteSongDao.toggleFavorite(song)
     }

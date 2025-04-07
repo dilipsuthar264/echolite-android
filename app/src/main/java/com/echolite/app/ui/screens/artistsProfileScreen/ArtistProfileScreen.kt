@@ -1,15 +1,14 @@
 package com.echolite.app.ui.screens.artistsProfileScreen
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyRow
@@ -29,18 +28,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
-import coil3.compose.AsyncImage
+import coil3.compose.rememberAsyncImagePainter
 import com.echolite.app.R
 import com.echolite.app.data.model.QueryModel
 import com.echolite.app.data.model.response.ArtistResponseModel
@@ -51,12 +49,14 @@ import com.echolite.app.navigation.ArtistProfileScreenRoute
 import com.echolite.app.navigation.ArtistSongsScreenRoute
 import com.echolite.app.ui.components.AppBar
 import com.echolite.app.ui.components.CustomListItem
+import com.echolite.app.ui.components.HorizontalAlbumItem
 import com.echolite.app.ui.components.HorizontalSpace
 import com.echolite.app.ui.components.NowPlayingAnimation
 import com.echolite.app.ui.components.ShowBottomLoader
 import com.echolite.app.ui.components.VerticalSpace
 import com.echolite.app.ui.screens.artistsProfileScreen.viewmodel.ArtistViewModel
 import com.echolite.app.utils.getViewModelStoreOwner
+import com.echolite.app.utils.middleItem
 import com.echolite.app.utils.singleClick
 import com.echolite.app.utils.updatePlayingSong
 
@@ -206,8 +206,10 @@ fun ArtistSongListItem(song: SongResponseModel, onClick: () -> Unit) {
         subtitle = song.album?.name ?: "",
         modifier = Modifier.padding(horizontal = 20.dp, vertical = 5.dp),
         leadingContent = {
-            AsyncImage(
-                model = song.image?.get(1)?.url,
+            Image(
+                rememberAsyncImagePainter(song.image?.middleItem()?.url,
+                    placeholder = painterResource(R.drawable.ic_play),
+                    error = painterResource(R.drawable.ic_play)),
                 contentDescription = null,
                 modifier = Modifier
                     .clip(RoundedCornerShape(10.dp))
@@ -260,30 +262,13 @@ private fun LazyListScope.artistAlbumSection(
                 HorizontalSpace(10.dp)
             }
             items(items = data.topAlbums) { album ->
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .width(IntrinsicSize.Min)
-                        .clickable(onClick = singleClick {
-                            onClick(album.id)
-                        })
-                        .padding(horizontal = 10.dp)
-                ) {
-                    AsyncImage(
-                        model = album.image?.get(1)?.url,
-                        contentDescription = null,
-                        modifier = Modifier.size(100.dp)
-                    )
-                    Text(
-                        album.name ?: "",
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        maxLines = 1,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth(),
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
+                HorizontalAlbumItem(
+                    name = album.name ?: "",
+                    image = album.image?.get(1)?.url ?: "",
+                    onClick = singleClick {
+                        onClick(album.id)
+                    }
+                )
             }
             item {
                 HorizontalSpace(10.dp)
@@ -298,8 +283,11 @@ private fun ArtistImageAndName(data: ArtistResponseModel, modifier: Modifier) {
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        AsyncImage(
-            model = data.image?.last()?.url,
+        Image(
+            painter = rememberAsyncImagePainter(
+                data.image?.lastOrNull()?.url,
+                placeholder = painterResource(R.drawable.ic_user)
+            ),
             contentDescription = null,
             modifier = Modifier
                 .size(100.dp)

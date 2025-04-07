@@ -11,4 +11,15 @@
     <string name="songs">Songs</string>
     <string name="up_next">Up Next</string>
     <string name="queue">Queue</string>
+    <string name="favorite_songs">Favorite Songs</string>
+    <string name="recently_played_albums">Recently played albums</string>
+    <string name="recently_played_artists">Recently played artists</string>
+    <string name="recently_played_songs">Recently played songs</string>
+    <string name="liked_songs">Liked Songs</string>
+    <string name="no_recent_message">You haven’t played anything yet. Discover new music and make this space yours.</string>
+    <string name="start_typing_to_search_for_songs_artists_or_albums">Start typing to search for songs, artists, or albums.</string>
+    <string name="you_haven_t_liked_any_songs_yet">You haven’t liked any\nsongs yet</string>
+    <string name="export">Export</string>
+    <string name="import_">Import</string>
+    <string name="that_s_not_an_echolite_backup_file_look_for_one_ending_in_echolite">That’s not an Echolite backup file! Look for one ending in .echolite</string>
 </resources>

@@ -15,6 +15,7 @@ object MusicServiceConst {
     const val CANCEL = "cancel"
     const val PLAY = "play"
     const val REPEAT_MODE = "repeat_mode"
+    const val SEEK_TO = "seek_to"
 }
 
 enum class MusicRepeatMode(

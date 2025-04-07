@@ -29,3 +29,6 @@ data class ArtistAlbumScreenRoute(
 data class AlbumScreenRoute(
     val albumId: String
 )
+
+@Serializable
+object FavoriteScreenRoute

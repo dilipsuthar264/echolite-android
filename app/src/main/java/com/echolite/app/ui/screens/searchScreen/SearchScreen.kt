@@ -15,11 +15,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -32,6 +36,7 @@ import com.echolite.app.R
 import com.echolite.app.navigation.AlbumScreenRoute
 import com.echolite.app.navigation.ArtistProfileScreenRoute
 import com.echolite.app.ui.components.AppBar
+import com.echolite.app.ui.components.EmptyScreen
 import com.echolite.app.ui.components.VerticalSpace
 import com.echolite.app.ui.screens.searchScreen.components.AlbumListView
 import com.echolite.app.ui.screens.searchScreen.components.ArtistsListView
@@ -40,6 +45,7 @@ import com.echolite.app.ui.screens.searchScreen.components.SongsListView
 import com.echolite.app.ui.screens.searchScreen.data.SearchCategory
 import com.echolite.app.ui.screens.searchScreen.viewmodel.SearchViewModel
 import com.echolite.app.utils.dynamicPadding
+import kotlinx.coroutines.delay
 
 @Composable
 fun SearchScreen(
@@ -53,6 +59,28 @@ fun SearchScreen(
     val artists = viewModel.getArtists().collectAsLazyPagingItems()
     val albums = viewModel.getAlbum().collectAsLazyPagingItems()
     val currentTrack by viewModel.musicPlayerStateHolder.currentTrack.collectAsStateWithLifecycle()
+    val focusRequester = remember { FocusRequester() }
+
+    val noSong = songs.itemSnapshotList.isEmpty()
+    val noAlbum = albums.itemSnapshotList.isEmpty()
+    val noArtist = artists.itemSnapshotList.isEmpty()
+
+    // Launch effect to focus and show keyboard when the screen is opened
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
+    LaunchedEffect(searchState.value) {
+        delay(200)
+        if (searchState.value.trim().isNotEmpty()) {
+            viewModel.updateQueryModel(
+                viewModel.queryModel.value.copy(
+                    query = searchState.value,
+                )
+            )
+        }
+    }
+
+
 
     Scaffold(topBar = {
         AppBar(
@@ -66,13 +94,17 @@ fun SearchScreen(
                 .fillMaxSize()
                 .dynamicPadding(paddingValues)
         ) {
-            SearchField(searchState, onSearch = {
-                viewModel.updateQueryModel(
-                    viewModel.queryModel.value.copy(
-                        query = searchState.value,
+            SearchField(
+                focusRequester,
+                searchState,
+                onSearch = {
+                    viewModel.updateQueryModel(
+                        viewModel.queryModel.value.copy(
+                            query = searchState.value.trim(),
+                        )
                     )
-                )
-            })
+                }
+            )
             VerticalSpace(20.dp)
             Row(
                 modifier = Modifier
@@ -109,36 +141,47 @@ fun SearchScreen(
             }
             VerticalSpace(20.dp)
             HorizontalDivider()
-            when (selectedCategory.value) {
-                SearchCategory.SONGS -> {
-                    SongsListView(
-                        songs,
-                        currentTrack = currentTrack,
-                        modifier = Modifier.weight(1f),
-                        onClick = { song ->
-                            song?.let {
-                                viewModel.musicPlayerStateHolder.playTrack(
-                                    it,
-                                    songs.itemSnapshotList.items
-                                )
+            if (noSong && noAlbum && noArtist && searchState.value.trim().isEmpty()) {
+                EmptyScreen(
+                    text = stringResource(R.string.start_typing_to_search_for_songs_artists_or_albums),
+                    image = R.drawable.ic_search_outline,
+                    iconSize = 100.dp,
+                    modifier = Modifier
+                        .fillMaxWidth(0.8f)
+                        .align(Alignment.CenterHorizontally)
+                )
+            } else {
+                when (selectedCategory.value) {
+                    SearchCategory.SONGS -> {
+                        SongsListView(
+                            songs,
+                            currentTrack = currentTrack,
+                            modifier = Modifier.weight(1f),
+                            onClick = { song ->
+                                song?.let {
+                                    viewModel.musicPlayerStateHolder.playTrack(
+                                        it,
+                                        songs.itemSnapshotList.items
+                                    )
+                                }
                             }
-                        }
-                    )
-                }
+                        )
+                    }
 
-                SearchCategory.ARTIST -> {
-                    ArtistsListView(
-                        artists,
-                        onClick = {
-                            navController.navigate(ArtistProfileScreenRoute(it))
-                        }
-                    )
-                }
+                    SearchCategory.ARTIST -> {
+                        ArtistsListView(
+                            artists,
+                            onClick = {
+                                navController.navigate(ArtistProfileScreenRoute(it))
+                            }
+                        )
+                    }
 
-                SearchCategory.ALBUM -> {
-                    AlbumListView(albums, modifier = Modifier.weight(1f), onClick = {
-                        navController.navigate(AlbumScreenRoute(it ?: ""))
-                    })
+                    SearchCategory.ALBUM -> {
+                        AlbumListView(albums, modifier = Modifier.weight(1f), onClick = {
+                            navController.navigate(AlbumScreenRoute(it ?: ""))
+                        })
+                    }
                 }
             }
         }
