@@ -12,6 +12,9 @@ interface FavoriteSongDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun addToFavorite(song: FavoriteSongEntity)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun addAllToFavorite(songs: List<FavoriteSongEntity>)
+
     @Query("DELETE FROM favorite_song_table WHERE song_id = :songId")
     suspend fun removeFromFavorites(songId: String)
 

@@ -31,6 +31,7 @@ fun AppBar(
     elevation: Boolean = false,
     isBackNavigation: Boolean = true,
     actions: @Composable() (RowScope.() -> Unit) = {},
+    isHomeBtn: Boolean = true,
     bgColor: Color = MaterialTheme.colorScheme.background
 ) {
     Column(
@@ -40,26 +41,29 @@ fun AppBar(
             colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = bgColor
             ),
-            title = { Text(heading) },
+            title = { Text(heading, color = MaterialTheme.colorScheme.onBackground) },
             navigationIcon = {
                 if (isBackNavigation) {
                     AppBarBackBtn(navController, MaterialTheme.colorScheme.onBackground)
                 }
             },
             actions = {
-                IconButton(
-                    onClick = singleClick{
-                        navController.popBackStack(DashboardRoute, false)
-                    },
-                    modifier = Modifier
-                        .padding(start = 5.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_home),
-                        contentDescription = "Back",
-                        tint = MaterialTheme.colorScheme.onBackground
-                    )
+                if (isHomeBtn) {
+                    IconButton(
+                        onClick = singleClick {
+                            navController.popBackStack(DashboardRoute, false)
+                        },
+                        modifier = Modifier
+                            .padding(start = 5.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_home),
+                            contentDescription = "Home",
+                            tint = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
                 }
+                actions()
             },
         )
         if (elevation) {

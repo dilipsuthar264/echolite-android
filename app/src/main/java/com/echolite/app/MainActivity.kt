@@ -52,8 +52,6 @@ import kotlin.system.exitProcess
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
-    private val recentViewmodel by viewModels<RecentViewModel>()
-
     @Inject
     lateinit var musicStateHolder: MusicPlayerStateHolder
 
@@ -108,10 +106,8 @@ class MainActivity : AppCompatActivity() {
         super.onStart()
         val intent = Intent(this, MusicPlayerService::class.java)
         bindService(intent, connection, Context.BIND_AUTO_CREATE or Context.BIND_IMPORTANT)
-    }
 
-    override fun onResume() {
-        super.onResume()
+
         lifecycleScope.launch {
             musicStateHolder.commands.collect { command ->
                 handleMusicCommand(command)
@@ -120,7 +116,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun handleMusicCommand(command: MusicCommand) {
-
         if (service == null) {
             Log.e("MusicActivity", "Service is null! Cannot send command")
             return
@@ -143,13 +138,14 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-
     override fun onDestroy() {
         super.onDestroy()
         if (isBound) {
             unbindService(connection)
             isBound = false
         }
+        val intent = Intent(this, MusicPlayerService::class.java)
+        stopService(intent)
         exitProcess(0)
     }
 
@@ -200,6 +196,7 @@ class MainActivity : AppCompatActivity() {
                         ) {
                             HorizontalDivider()
                             MusicBottomBar(
+                                navController = navController,
                                 onClick = {
                                     isMusicPlayerExtended = true
                                 }

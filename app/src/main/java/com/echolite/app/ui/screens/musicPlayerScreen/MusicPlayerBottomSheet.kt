@@ -65,7 +65,7 @@ fun MusicPlayerBottomSheet(
     navController: NavHostController,
     viewmodel: MusicPlayerViewModel = hiltViewModel(), onDismiss: () -> Unit,
     favViewModel: FavoriteViewModel = hiltViewModel(navController.getViewModelStoreOwner()),
-    recentViewmodel: RecentViewModel = hiltViewModel(navController.getViewModelStoreOwner())
+
 ) {
     val currentTrack by viewmodel.musicPlayerStateHolder.currentTrack.collectAsStateWithLifecycle()
     val currentDuration by viewmodel.musicPlayerStateHolder.currentDuration.collectAsStateWithLifecycle()
@@ -73,14 +73,6 @@ fun MusicPlayerBottomSheet(
     val songList by viewmodel.musicPlayerStateHolder.songList.collectAsStateWithLifecycle()
     val nextSong = findNextSong(songList, currentTrack)
 
-    LaunchedEffect(currentTrack) {
-        currentTrack?.let {
-            recentViewmodel.addToRecentSong(it)
-        }
-        currentTrack?.artists?.primary?.firstOrNull()?.let {
-            recentViewmodel.addToRecentArtist(it)
-        }
-    }
 
     // show show queue
     var showQueue by remember { mutableStateOf(false) }

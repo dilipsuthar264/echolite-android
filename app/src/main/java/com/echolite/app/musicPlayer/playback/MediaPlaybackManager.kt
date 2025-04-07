@@ -2,15 +2,16 @@ package com.echolite.app.musicPlayer.playback
 
 import android.content.Context
 import android.media.AudioAttributes
+import android.media.AudioFocusRequest
+import android.media.AudioManager
 import android.media.MediaPlayer
 import android.net.Uri
+import android.os.Build
 import android.util.Log
 import com.echolite.app.data.model.response.SongResponseModel
 import com.echolite.app.musicPlayer.debouncer.Debouncer
 import com.echolite.app.musicPlayer.notification.MusicNotificationManager
 import com.echolite.app.musicPlayer.playlist.PlaylistManager
-import com.echolite.app.room.repo.RecentSongRepo
-import com.echolite.app.room.viewmodel.RecentViewModel
 import com.echolite.app.utils.MusicRepeatMode
 import com.echolite.app.utils.MusicServiceConst
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -32,8 +33,10 @@ class MediaPlaybackManager @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
 
+    private var mediaPlayer = MediaPlayer()
 
-    val mediaPlayer = MediaPlayer()
+    private lateinit var audioManager: AudioManager
+    private var focusRequest: AudioFocusRequest? = null
 
     val isPlaying = MutableStateFlow(false)
     val currentDuration = MutableStateFlow(0f)
@@ -48,12 +51,76 @@ class MediaPlaybackManager @Inject constructor(
         .setUsage(AudioAttributes.USAGE_MEDIA)
         .build()
 
+    // Audio focus change listener
+    private val audioFocusChangeListener = AudioManager.OnAudioFocusChangeListener { focusChange ->
+        when (focusChange) {
+            AudioManager.AUDIOFOCUS_LOSS -> {
+                // Permanent loss of focus (e.g., another app starts playing)
+                pause()
+            }
+
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
+                // Temporary loss of focus (e.g., notification sound)
+                pause()
+            }
+
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
+                // Temporary loss where ducking (lowering volume) is allowed
+                mediaPlayer.setVolume(0.2f, 0.2f) // Lower volume
+            }
+
+            AudioManager.AUDIOFOCUS_GAIN -> {
+                // Regained focus, resume playback if it was paused
+                if (!mediaPlayer.isPlaying && isPlaying.value) {
+                    mediaPlayer.start()
+                    mediaPlayer.setVolume(1.0f, 1.0f) // Restore volume
+                    isPlaying.update { true }
+                }
+            }
+        }
+    }
+
+    init {
+        // Initialize AudioManager
+        audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+    }
+
+    private fun requestAudioFocus(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            focusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+                .setAudioAttributes(audioAttribute)
+                .setOnAudioFocusChangeListener(audioFocusChangeListener)
+                .build()
+            audioManager.requestAudioFocus(focusRequest!!) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
+        } else {
+            @Suppress("DEPRECATION")
+            audioManager.requestAudioFocus(
+                audioFocusChangeListener,
+                AudioManager.STREAM_MUSIC,
+                AudioManager.AUDIOFOCUS_GAIN
+            ) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
+        }
+    }
+
+    private fun abandonAudioFocus() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            focusRequest?.let { audioManager.abandonAudioFocusRequest(it) }
+        } else {
+            @Suppress("DEPRECATION")
+            audioManager.abandonAudioFocus(audioFocusChangeListener)
+        }
+    }
 
     fun play(track: SongResponseModel) {
         if (Debouncer.shouldIgnoreCall(MusicServiceConst.PLAY)) return
         try {
+            if (!requestAudioFocus()) {
+                Log.e(TAG, "Audio focus request failed")
+                return
+            }
             isLoading.update { true }
             mediaPlayer.reset()
+            mediaPlayer = MediaPlayer()
             mediaPlayer.setAudioAttributes(audioAttribute)
             mediaPlayer.setDataSource(
                 context, Uri.parse(track.downloadUrl?.lastOrNull()?.url)
@@ -112,6 +179,19 @@ class MediaPlaybackManager @Inject constructor(
         play(nextTrack)
     }
 
+    private fun pause() {
+        if (mediaPlayer.isPlaying) {
+            mediaPlayer.pause()
+            isPlaying.value = false
+            playlistManager.currentTrack.value?.let {
+                notificationManager.sendNotification(
+                    it,
+                    mediaPlayer
+                )
+            }
+        }
+    }
+
     fun playPause() {
         if (Debouncer.shouldIgnoreCall(MusicServiceConst.PLAY_PAUSE)) return
         try {
@@ -119,9 +199,11 @@ class MediaPlaybackManager @Inject constructor(
                 mediaPlayer.pause()
                 isPlaying.value = false
             } else if (mediaPlayer.currentPosition > 0) {
-                mediaPlayer.start()
-                isPlaying.value = true
-                updateDuration()
+                if (requestAudioFocus()) {
+                    mediaPlayer.start()
+                    isPlaying.value = true
+                    updateDuration()
+                }
             } else {
                 playlistManager.currentTrack.value?.let { play(it) }
             }

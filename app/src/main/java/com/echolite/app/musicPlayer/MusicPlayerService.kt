@@ -1,8 +1,13 @@
 package com.echolite.app.musicPlayer
 
 import android.app.Service
+import android.content.Context
 import android.content.Intent
+import android.media.AudioAttributes
+import android.media.AudioFocusRequest
+import android.media.AudioManager
 import android.os.Binder
+import android.os.Build
 import android.os.IBinder
 import com.echolite.app.data.model.response.SongResponseModel
 import com.echolite.app.musicPlayer.notification.MusicNotificationManager
@@ -24,8 +29,6 @@ class MusicPlayerService : Service() {
 
     @Inject
     lateinit var notificationManager: MusicNotificationManager
-
-
     private val binder = MusicBinder()
 
 
@@ -59,10 +62,10 @@ class MusicPlayerService : Service() {
         notificationManager.initialize(this)
     }
 
+
     override fun onTaskRemoved(rootIntent: Intent?) {
         super.onTaskRemoved(rootIntent)
-        stopForeground(true)
-        stopSelf()
+        stopService()
     }
 
     fun play(track: SongResponseModel) = playbackManager.play(track)

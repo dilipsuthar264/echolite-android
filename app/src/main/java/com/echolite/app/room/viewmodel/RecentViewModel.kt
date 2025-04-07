@@ -14,9 +14,10 @@ import com.echolite.app.room.repo.RecentArtistRepo
 import com.echolite.app.room.repo.RecentSongRepo
 import com.echolite.app.utils.toJson
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -30,7 +31,7 @@ class RecentViewModel @Inject constructor(
 
     // loading state
 
-    private val _isLoading = MutableStateFlow(false)
+    private val _isLoading = MutableStateFlow(true)
     val isLoading = _isLoading.asStateFlow()
 
     /**
@@ -60,7 +61,6 @@ class RecentViewModel @Inject constructor(
     private fun fetchRecentPlayedAlbums() {
         viewModelScope.launch {
             _recentPlayedAlbums.value = recentAlbumRepo.getRecentPlayedAlbums()
-            _isLoading.value = false
         }
     }
 
@@ -91,7 +91,6 @@ class RecentViewModel @Inject constructor(
     private fun fetchRecentPlayedArtists() {
         viewModelScope.launch {
             _recentPlayedArtists.value = recentArtistRepo.getRecentPlayedArtists()
-            _isLoading.value = false
         }
     }
 
@@ -126,9 +125,7 @@ class RecentViewModel @Inject constructor(
     val recentPlayedSongs = _recentPlayedSongs.asStateFlow()
     private fun fetchRecentPlayedSongs() {
         viewModelScope.launch {
-            _isLoading.value= true
             _recentPlayedSongs.value = recentSongRepo.getRecentPlayedSongs()
-            _isLoading.value = false
         }
     }
 
@@ -138,9 +135,18 @@ class RecentViewModel @Inject constructor(
 //    }
 
     fun fetchData() {
-        fetchRecentPlayedAlbums()
-        fetchRecentPlayedArtists()
-        fetchRecentPlayedSongs()
+        viewModelScope.launch {
+            _isLoading.value = true
+            val jobs = listOf(
+                launch { fetchRecentPlayedAlbums() },
+                launch { fetchRecentPlayedSongs() },
+                launch { fetchRecentPlayedArtists() }
+            )
+            jobs.joinAll()
+            delay(500)
+            _isLoading.value = false
+        }
+
     }
 
 }
